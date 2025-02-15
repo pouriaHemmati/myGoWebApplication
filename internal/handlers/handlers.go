@@ -1,9 +1,13 @@
 package handlers
 
 import (
-	"myGoWebApplication/pkg/config"
-	"myGoWebApplication/pkg/models"
-	render "myGoWebApplication/pkg/render"
+	"encoding/json"
+	"fmt"
+	"log"
+	"myGoWebApplication/internal/config"
+	"myGoWebApplication/internal/forms"
+	"myGoWebApplication/internal/models"
+	render "myGoWebApplication/internal/render"
 	"net/http"
 )
 
@@ -68,13 +72,35 @@ func (m *Repository) Reservation(w http.ResponseWriter, r *http.Request) {
 
 // PostReservation is the handler for the reservation page and POST requests
 func (m *Repository) PostReservation(w http.ResponseWriter, r *http.Request) {
-	//start := r.Form.Get("startingDate")
-	//end := r.Form.Get("endingDate")
-	//w.Write([]byte(fmt.Sprintf("Arrival date value is set to %s, departure date value to %s", start, end)))
-	w.Write([]byte("Arrival date value is set to %s, departure date value to %s"))
+	start := r.Form.Get("startingDate")
+	end := r.Form.Get("endingDate")
+	w.Write([]byte(fmt.Sprintf("Arrival date value is set to %s, departure date value to %s", start, end)))
+}
+
+type jsonResponse struct {
+	Ok      bool   `json:"ok"`
+	Message string `json:"message"`
+}
+
+func (m *Repository) ReservationJSON(w http.ResponseWriter, r *http.Request) {
+	resp := jsonResponse{
+		Ok:      true,
+		Message: "It is available!",
+	}
+	output, err := json.MarshalIndent(resp, "", "    ")
+	if err != nil {
+		log.Println(err)
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(output)
 }
 
 // MakeReservation is the handler for the make-reservatio page
 func (m *Repository) MakeReservation(w http.ResponseWriter, r *http.Request) {
-	render.RenderTemplate(w, r, "make-reservation-page.tpml", &models.TemplateData{})
+	render.RenderTemplate(w, r, "make-reservation-page.tpml", &models.TemplateData{
+		Form: forms.New(nil),
+	})
+}
+func (m *Repository) PostMakeReservation(w http.ResponseWriter, r *http.Request) {
+
 }

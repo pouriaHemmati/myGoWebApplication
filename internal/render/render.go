@@ -5,8 +5,8 @@ import (
 	"github.com/justinas/nosurf"
 	"html/template"
 	"log"
-	"myGoWebApplication/pkg/config"
-	"myGoWebApplication/pkg/models"
+	"myGoWebApplication/internal/config"
+	"myGoWebApplication/internal/models"
 	"net/http"
 	"path/filepath"
 )

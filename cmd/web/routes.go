@@ -3,8 +3,8 @@ package main
 import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
-	"myGoWebApplication/pkg/config"
-	"myGoWebApplication/pkg/handlers"
+	"myGoWebApplication/internal/config"
+	"myGoWebApplication/internal/handlers"
 	"net/http"
 )
 
@@ -24,7 +24,9 @@ func routes(c *config.AppConfig) http.Handler {
 	mux.Get("/family", handlers.Repo.Family)
 	mux.Get("/reservation", handlers.Repo.Reservation)
 	mux.Post("/reservation", handlers.Repo.PostReservation)
+	mux.Post("/reservation-json", handlers.Repo.ReservationJSON)
 	mux.Get("/make-reservation", handlers.Repo.MakeReservation)
+	mux.Post("/make-reservation", handlers.Repo.PostMakeReservation)
 
 	fileServer := http.FileServer(http.Dir("./static/"))
 	mux.Handle("/static/*", http.StripPrefix("/static", fileServer))

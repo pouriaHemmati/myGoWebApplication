@@ -3,14 +3,12 @@ package main
 import (
 	"fmt"
 	"github.com/alexedwards/scs/v2"
-	"time"
-
 	"log"
-
-	"myGoWebApplication/pkg/config"
-	"myGoWebApplication/pkg/handlers"
-	render "myGoWebApplication/pkg/render"
+	"myGoWebApplication/internal/config"
+	"myGoWebApplication/internal/handlers"
+	"myGoWebApplication/internal/render"
 	"net/http"
+	"time"
 )
 
 const portNumber = ":8080"
