@@ -113,7 +113,7 @@ func (m *Repository) PostMakeReservation(w http.ResponseWriter, r *http.Request)
 		return
 	}
 	reservation := models.Reservation{
-		Name:  r.Form.Get("fill_name"),
+		Name:  r.Form.Get("full_name"),
 		Email: r.Form.Get("email"),
 		Phone: r.Form.Get("phone"),
 	}
@@ -122,7 +122,8 @@ func (m *Repository) PostMakeReservation(w http.ResponseWriter, r *http.Request)
 
 	//form.Has("full_name", r)
 	form.Required("full_name", "email")
-
+	form.MinLength("full_name", 2, r)
+	form.IsEmail("email")
 	if !form.Valid() {
 		data := make(map[string]interface{})
 		data["reservation"] = reservation
@@ -133,5 +134,21 @@ func (m *Repository) PostMakeReservation(w http.ResponseWriter, r *http.Request)
 		})
 		return
 	}
+	m.App.Session.Put(r.Context(), "reservation", reservation)
+	http.Redirect(w, r, "/reservation-overview", http.StatusSeeOther)
+}
 
+func (m *Repository) ReservationOverview(w http.ResponseWriter, r *http.Request) {
+	reservation, ok := m.App.Session.Get(r.Context(), "reservation").(models.Reservation)
+	if !ok {
+		log.Println("reservation not found")
+		return
+	}
+
+	data := make(map[string]interface{})
+	data["reservation"] = reservation
+
+	render.RenderTemplate(w, r, "reservation-overview-page.tpml", &models.TemplateData{
+		Data: data,
+	})
 }
