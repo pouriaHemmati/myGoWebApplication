@@ -2,6 +2,7 @@ package models
 
 import "myGoWebApplication/internal/forms"
 
+// TemplateData holds any kind of data sent from handlers to templates
 type TemplateData struct {
 	StringMap map[string]string
 	IntMap    map[string]int

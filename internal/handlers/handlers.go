@@ -3,12 +3,13 @@ package handlers
 import (
 	"encoding/json"
 	"fmt"
-	"log"
+	"myGoWebApplication/internal/helpers"
+	"net/http"
+
 	"myGoWebApplication/internal/config"
 	"myGoWebApplication/internal/forms"
 	"myGoWebApplication/internal/models"
-	render "myGoWebApplication/internal/render"
-	"net/http"
+	"myGoWebApplication/internal/render"
 )
 
 // Repository is the repository type
@@ -34,8 +35,8 @@ func NewHandlers(r *Repository) {
 // Home is the handler for the home page
 func (m *Repository) Home(w http.ResponseWriter, r *http.Request) {
 
-	remoteIP := r.RemoteAddr
-	m.App.Session.Put(r.Context(), "remote_ip", remoteIP)
+	//remoteIP := r.RemoteAddr
+	//m.App.Session.Put(r.Context(), "remote_ip", remoteIP)
 
 	render.RenderTemplate(w, r, "home-page.tpml", &models.TemplateData{})
 }
@@ -78,26 +79,31 @@ func (m *Repository) PostReservation(w http.ResponseWriter, r *http.Request) {
 }
 
 type jsonResponse struct {
-	Ok      bool   `json:"ok"`
+	OK      bool   `json:"ok"`
 	Message string `json:"message"`
 }
 
+// ReservationJSON is the handler for reservation-json and returns JSON
 func (m *Repository) ReservationJSON(w http.ResponseWriter, r *http.Request) {
 	resp := jsonResponse{
-		Ok:      true,
-		Message: "It is available!",
+		OK:      false,
+		Message: "It's available!",
 	}
+
 	output, err := json.MarshalIndent(resp, "", "    ")
 	if err != nil {
-		log.Println(err)
+		helpers.ServerError(w, err)
+		return
 	}
+
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(output)
 }
 
-// MakeReservation is the handler for the make-reservatio page
+// MakeReservation is the handler for the make-reservation page
 func (m *Repository) MakeReservation(w http.ResponseWriter, r *http.Request) {
 	var emptyReservation models.Reservation
+
 	data := make(map[string]interface{})
 	data["reservation"] = emptyReservation
 
@@ -106,12 +112,15 @@ func (m *Repository) MakeReservation(w http.ResponseWriter, r *http.Request) {
 		Data: data,
 	})
 }
+
+// PostMakeReservation is the POST request handler for the reservation form
 func (m *Repository) PostMakeReservation(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseForm()
 	if err != nil {
-		log.Println(err)
+		helpers.ServerError(w, err)
 		return
 	}
+
 	reservation := models.Reservation{
 		Name:  r.Form.Get("full_name"),
 		Email: r.Form.Get("email"),
@@ -120,10 +129,10 @@ func (m *Repository) PostMakeReservation(w http.ResponseWriter, r *http.Request)
 
 	form := forms.New(r.PostForm)
 
-	//form.Has("full_name", r)
 	form.Required("full_name", "email")
-	form.MinLength("full_name", 2, r)
+	form.MinLength("full_name", 2)
 	form.IsEmail("email")
+
 	if !form.Valid() {
 		data := make(map[string]interface{})
 		data["reservation"] = reservation
@@ -134,14 +143,18 @@ func (m *Repository) PostMakeReservation(w http.ResponseWriter, r *http.Request)
 		})
 		return
 	}
+
 	m.App.Session.Put(r.Context(), "reservation", reservation)
 	http.Redirect(w, r, "/reservation-overview", http.StatusSeeOther)
 }
 
+// ReservationOverview displays the reservation summary page
 func (m *Repository) ReservationOverview(w http.ResponseWriter, r *http.Request) {
 	reservation, ok := m.App.Session.Get(r.Context(), "reservation").(models.Reservation)
 	if !ok {
-		log.Println("reservation not found")
+		m.App.ErrorLog.Println("Could not get item from session.")
+		m.App.Session.Put(r.Context(), "error", "No reservation data in this session available.")
+		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
 		return
 	}
 
